@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Keyri Android Example Supabase</string>
+    <string name="supabase_example_title">Supabase Example</string>
+    <string name="supabase_auth">Authenticate with Supabase</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+</resources>
