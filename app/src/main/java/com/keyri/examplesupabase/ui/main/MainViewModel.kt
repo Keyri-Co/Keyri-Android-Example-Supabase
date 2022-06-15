@@ -18,7 +18,6 @@ class MainViewModel(private val api: ApiService) : ViewModel() {
     val authResponseFlow: StateFlow<AuthResponse?>
         get() = _authResponseFlow
 
-
     fun authorize(apiKey: String, email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val body = SignupRequestBody(email, password)
