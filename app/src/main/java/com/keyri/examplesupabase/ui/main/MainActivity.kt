@@ -47,8 +47,6 @@ class MainActivity : AppCompatActivity() {
 
     private val mainViewModel by viewModel<MainViewModel>()
 
-    private var authenticationStarted = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
@@ -73,19 +71,44 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.authResponseFlow.collect {
-                    it?.takeIf { !authenticationStarted }?.let { authResponse ->
+                    it?.let { authResponse ->
                         val email = authResponse.user.email
                         val keyri = Keyri()
 
-                        val payload = JSONObject().apply {
-                            put("token", authResponse.accessToken)
-                            put("provider", "supabase:email_password") // Optional
-                            put("timestamp", System.currentTimeMillis()) // Optional
-                            put("associationKey", keyri.getAssociationKey(email)) // Optional
-                            put("userSignature", keyri.getUserSignature(email, email)) // Optional
+                        val tokenData = JSONObject().apply {
+                            put("accessToken", authResponse.accessToken)
+                            put("tokenType", authResponse.tokenType)
+                            put("refreshToken", authResponse.refreshToken)
+                            put("expiresIn", authResponse.expiresIn)
+                        }
+
+                        val userProfileData = JSONObject().apply {
+                            put("email", authResponse.user.email)
+                            put("id", authResponse.user.id)
+                            put("phone", authResponse.user.phone)
+                        }
+
+                        val data = JSONObject().apply {
+                            put("token", tokenData)
+                            put("userProfile", userProfileData)
+                        }
+
+                        val signingData = JSONObject().apply {
+                            put("timestamp", System.currentTimeMillis())
+                            put("email", email)
+                            put("uid", authResponse.user.id)
                         }.toString()
 
-                        authenticationStarted = true
+                        val signature = keyri.getUserSignature(email, signingData)
+
+                        val payload = JSONObject().apply {
+                            put("data", data)
+                            put("signingData", signingData)
+                            put("userSignature", signature) // Optional
+                            put("associationKey", keyri.getAssociationKey(email)) // Optional
+                        }.toString()
+
+                        mainViewModel.clear()
 
                         keyriAuth(email, payload)
                     }

@@ -33,4 +33,8 @@ class MainViewModel(private val api: ApiService) : ViewModel() {
             }
         }
     }
+
+    fun clear() {
+        _authResponseFlow.value = null
+    }
 }
