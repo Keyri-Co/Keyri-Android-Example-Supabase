@@ -2,6 +2,7 @@ package com.keyri.examplesupabase.ui.credentials
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -22,10 +23,10 @@ class CredentialsActivity : AppCompatActivity() {
 
         with(binding) {
             bPassCredentials.setOnClickListener {
-                val email = etEmail.text.toString()
-                val password = etPassword.text.toString()
+                val email = etEmail.getNotEmptyText()
+                val password = etPassword.getNotEmptyText()
 
-                if (email.isNotEmpty() && password.isNotEmpty()) {
+                if (email != null && password != null) {
                     val intent = Intent().apply {
                         putExtra(EMAIL_EXTRA_KEY, email)
                         putExtra(PASSWORD_EXTRA_KEY, password)
@@ -42,6 +43,10 @@ class CredentialsActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun EditText.getNotEmptyText(): String? {
+        return text?.takeIf { it.isNotEmpty() }?.toString()
     }
 
     companion object {

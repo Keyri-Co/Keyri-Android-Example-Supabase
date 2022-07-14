@@ -3,6 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Ivan/StudioProjects/Keyri-Android-Example-Supabase/app/src/main/res/layout/activity_credentials.xml" value="0.1" />
+        <entry key="..\:/Users/Ivan/StudioProjects/Keyri-Android-Example-Supabase/app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="..\:/Users/kulag/AndroidStudioProjects/KeyriAndroidExampleSupabase/app/src/main/res/drawable/ic_supabase.xml" value="0.109" />
         <entry key="..\:/Users/kulag/AndroidStudioProjects/KeyriAndroidExampleSupabase/app/src/main/res/layout/activity_credentials.xml" value="0.25" />
         <entry key="..\:/Users/kulag/AndroidStudioProjects/KeyriAndroidExampleSupabase/app/src/main/res/layout/activity_main.xml" value="0.28637627432808155" />

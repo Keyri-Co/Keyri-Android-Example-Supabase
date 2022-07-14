@@ -116,46 +116,14 @@ versions):
 
 ## Authentication
 
-Use `access_token` and `email` fields to create payload and user signature:
+Use `refresh_token` field to create payload:
 
 ```kotlin
 val email = authResponse.user.email
-val keyri = Keyri()
-
-val tokenData = JSONObject().apply {
-    put("accessToken", authResponse.accessToken)
-    put("tokenType", authResponse.tokenType)
-    put("refreshToken", authResponse.refreshToken)
-    put("expiresIn", authResponse.expiresIn)
-}
-
-val userProfileData = JSONObject().apply {
-    put("email", authResponse.user.email)
-    put("id", authResponse.user.id)
-    put("phone", authResponse.user.phone)
-}
-
-val data = JSONObject().apply {
-    put("token", tokenData)
-    put("userProfile", userProfileData)
-}
-
-val signingData = JSONObject().apply {
-    put("timestamp", System.currentTimeMillis())
-    put("email", email)
-    put("uid", authResponse.user.id)
-}.toString()
-
-val signature = keyri.getUserSignature(email, signingData)
 
 val payload = JSONObject().apply {
-    put("data", data)
-    put("signingData", signingData)
-    put("userSignature", signature) // Optional
-    put("associationKey", keyri.getAssociationKey(email)) // Optional
+    put("refreshToken", authResponse.refreshToken)
 }.toString()
-
-mainViewModel.clear()
 
 keyriAuth(email, payload)
 ```

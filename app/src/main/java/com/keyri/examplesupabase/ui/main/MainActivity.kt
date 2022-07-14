@@ -3,22 +3,27 @@ package com.keyri.examplesupabase.ui.main
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.Lifecycle
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.keyri.examplesupabase.BuildConfig
+import com.keyri.examplesupabase.data.AuthResponse
 import com.keyri.examplesupabase.databinding.ActivityMainBinding
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.EMAIL_EXTRA_KEY
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.PASSWORD_EXTRA_KEY
-import com.keyrico.keyrisdk.Keyri
 import com.keyrico.keyrisdk.ui.auth.AuthWithScannerActivity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import retrofit2.HttpException
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private val easyKeyriAuthLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             val text = if (it.resultCode == RESULT_OK) "Authenticated" else "Failed to authenticate"
+
+            binding.progress.isVisible = false
 
             Toast.makeText(this, text, Toast.LENGTH_LONG).show()
         }
@@ -37,11 +44,18 @@ class MainActivity : AppCompatActivity() {
                 val email = it.data?.getStringExtra(EMAIL_EXTRA_KEY)
                 val password = it.data?.getStringExtra(PASSWORD_EXTRA_KEY)
 
-                mainViewModel.authorize(
-                    BuildConfig.API_KEY,
-                    checkNotNull(email),
-                    checkNotNull(password)
-                )
+                binding.progress.isVisible = true
+
+                lifecycleScope.launch {
+                    mainViewModel.signup(
+                        BuildConfig.API_KEY,
+                        checkNotNull(email),
+                        checkNotNull(password)
+                    )
+                        .catch { login(email, password) }
+                        .onEach(::processPayload)
+                        .collect()
+                }
             }
         }
 
@@ -59,62 +73,48 @@ class MainActivity : AppCompatActivity() {
         binding.bSupabaseAuth.setOnClickListener {
             authWithSupabase()
         }
+    }
 
-        observeViewModel()
+    private fun login(email: String, password: String) {
+        lifecycleScope.launch {
+            mainViewModel.login(BuildConfig.API_KEY, email, password)
+                .handleErrors()
+                .onEach(::processPayload)
+                .collect()
+        }
     }
 
     private fun authWithSupabase() {
         getCredentialsLauncher.launch(Intent(this, CredentialsActivity::class.java))
     }
 
-    private fun observeViewModel() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.authResponseFlow.collect {
-                    it?.let { authResponse ->
-                        val email = authResponse.user.email
-                        val keyri = Keyri()
+    private fun processPayload(authResponse: AuthResponse) {
+        val email = authResponse.user.email
 
-                        val tokenData = JSONObject().apply {
-                            put("accessToken", authResponse.accessToken)
-                            put("tokenType", authResponse.tokenType)
-                            put("refreshToken", authResponse.refreshToken)
-                            put("expiresIn", authResponse.expiresIn)
-                        }
+        val payload = JSONObject().apply {
+            put("refreshToken", authResponse.refreshToken)
+        }.toString()
 
-                        val userProfileData = JSONObject().apply {
-                            put("email", authResponse.user.email)
-                            put("id", authResponse.user.id)
-                            put("phone", authResponse.user.phone)
-                        }
+        keyriAuth(email, payload)
+    }
 
-                        val data = JSONObject().apply {
-                            put("token", tokenData)
-                            put("userProfile", userProfileData)
-                        }
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private fun <T> Flow<T>.handleErrors(): Flow<T> = catch { e ->
+        binding.progress.isVisible = false
 
-                        val signingData = JSONObject().apply {
-                            put("timestamp", System.currentTimeMillis())
-                            put("email", email)
-                            put("uid", authResponse.user.id)
-                        }.toString()
+        val message = if (e is HttpException) {
+            val errorBody = e.response()?.errorBody()
 
-                        val signature = keyri.getUserSignature(email, signingData)
-
-                        val payload = JSONObject().apply {
-                            put("data", data)
-                            put("signingData", signingData)
-                            put("userSignature", signature) // Optional
-                            put("associationKey", keyri.getAssociationKey(email)) // Optional
-                        }.toString()
-
-                        mainViewModel.clear()
-
-                        keyriAuth(email, payload)
-                    }
-                }
-            }
+            errorBody?.string()?.let {
+                JSONObject(it).getString("msg")
+            } ?: e.message ?: "Something went wrong"
+        } else {
+            e.message.toString()
         }
+
+        Log.e("Keyri example", message)
+
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
     }
 
     private fun keyriAuth(publicUserId: String?, payload: String) {
