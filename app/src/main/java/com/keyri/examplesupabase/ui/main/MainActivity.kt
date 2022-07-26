@@ -15,7 +15,7 @@ import com.keyri.examplesupabase.databinding.ActivityMainBinding
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.EMAIL_EXTRA_KEY
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.PASSWORD_EXTRA_KEY
-import com.keyrico.keyrisdk.ui.auth.AuthWithScannerActivity
+import com.keyrico.scanner.AuthWithScannerActivity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             val errorBody = e.response()?.errorBody()
 
             errorBody?.string()?.let {
-                JSONObject(it).getString("msg")
+                JSONObject(it).getString("error")
             } ?: e.message ?: "Something went wrong"
         } else {
             e.message.toString()
