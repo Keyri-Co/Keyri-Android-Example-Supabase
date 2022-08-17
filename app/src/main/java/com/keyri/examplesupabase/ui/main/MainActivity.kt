@@ -15,7 +15,7 @@ import com.keyri.examplesupabase.databinding.ActivityMainBinding
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.EMAIL_EXTRA_KEY
 import com.keyri.examplesupabase.ui.credentials.CredentialsActivity.Companion.PASSWORD_EXTRA_KEY
-import com.keyrico.scanner.AuthWithScannerActivity
+import com.keyrico.scanner.easyKeyriAuth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -118,12 +118,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun keyriAuth(publicUserId: String?, payload: String) {
-        val intent = Intent(this, AuthWithScannerActivity::class.java).apply {
-            putExtra(AuthWithScannerActivity.APP_KEY, "raB7SFWt27woKqkPhaUrmWAsCJIO8Moj")
-            putExtra(AuthWithScannerActivity.USERNAME, publicUserId)
-            putExtra(AuthWithScannerActivity.PAYLOAD, payload)
-        }
-
-        easyKeyriAuthLauncher.launch(intent)
+        easyKeyriAuth(
+            this,
+            easyKeyriAuthLauncher,
+            "raB7SFWt27woKqkPhaUrmWAsCJIO8Moj",
+            payload,
+            publicUserId
+        )
     }
 }
