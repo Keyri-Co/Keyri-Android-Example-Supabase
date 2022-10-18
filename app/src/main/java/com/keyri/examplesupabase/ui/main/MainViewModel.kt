@@ -9,14 +9,10 @@ import kotlinx.coroutines.flow.Flow
 class MainViewModel(private val api: ApiService) : ViewModel() {
 
     fun signup(apiKey: String, email: String, password: String): Flow<AuthResponse> {
-        val body = SignupRequestBody(email, password)
-
-        return api.signup(apiKey, body)
+        return api.signup(apiKey, SignupRequestBody(email, password))
     }
 
     fun login(apiKey: String, email: String, password: String): Flow<AuthResponse> {
-        val body = SignupRequestBody(email, password)
-
-        return api.login(apiKey, body = body)
+        return api.login(apiKey, body = SignupRequestBody(email, password))
     }
 }

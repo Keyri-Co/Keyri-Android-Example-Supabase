@@ -38,6 +38,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.keyri.examplesupabase'
 }
 
 dependencies {
@@ -60,7 +61,7 @@ dependencies {
     implementation 'tech.thdev:flow-call-adapter-factory:1.0.0'
 
     // Keyri
-    implementation 'com.keyri:keyri-bom:1.2.0'
+    implementation 'com.keyri:keyri-bom:2.1.0'
     implementation 'com.keyri:keyrisdk'
     implementation 'com.keyri:scanner'
 
